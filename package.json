@@ -1,0 +1,19 @@
+{
+  "name": "dropship-intel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:db": "vitest run tests/db tests/api",
+    "test:e2e": "playwright test --trace off",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed-demo": "node scripts/seed-demo.mjs"
+  }
+}
