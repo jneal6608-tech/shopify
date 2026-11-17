@@ -77,7 +77,7 @@ Vibe: lamplight in a dark room — dark pages, warm glowing product shots, calm 
 Costs: round light $4.63 · 30 cm bar $7.54 · 50 cm bar $8.09 · free supplier shipping.
 Profit = after 2.9% + $0.30 payments, 5% expected refunds, $0.50 packaging.
 
-**🌕 Motion Night Light** (variant "Pack size")
+**🌕 Motion Night Light** (options "Colour": warm white $4.63 / cool white $4.73 cost, same prices × "Pack size")
 | Option | Price | Your cost | Profit |
 |---|---|---|---|
 | 1 light | $14.99 | $4.63 | ~$8.40 |
@@ -92,7 +92,7 @@ Profit = after 2.9% + $0.30 payments, 5% expected refunds, $0.50 packaging.
 | 50 cm, 1 bar | $19.99 | $8.09 | ~$9.50 |
 | 50 cm, 2 bars | $34.99 | $16.18 | ~$15.25 |
 
-**🌙 Night Path Kit** — 2 round + 1 bar (30 cm) · **$34.99** · cost $16.80 · profit ~$14.60
+**🌙 Night Path Kit** — 2 round + 1 bar (30 cm), Night Light colour warm/cool · **$34.99** · cost $16.80 (warm) / $17.00 (cool) · profit ~$14.40–14.60
 
 Rules:
 - Free shipping on everything (simpler than thresholds, and it's in the announcement bar).
