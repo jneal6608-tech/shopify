@@ -118,7 +118,7 @@ function columns(input: Partial<ProductInput>) {
 
 export async function createProduct(db: Db, userId: string, input: ProductInput, opts: { isDemo?: boolean } = {}) {
   const cols = { ...columns(input), user_id: userId, is_demo: opts.isDemo ?? false };
-  const [row] = await db<{ id: string }[]>`insert into public.products ${db(cols as Record<string, string>)} returning id`;
+  const [row] = await db<{ id: string }[]>`insert into public.products ${db(cols as never)} returning id`;
   await db`insert into public.product_stage_events (user_id, product_id, from_stage, to_stage, reason)
            values (${userId}, ${row.id}, null, 'discovered', 'Created')`;
   return row.id;
@@ -127,7 +127,7 @@ export async function createProduct(db: Db, userId: string, input: ProductInput,
 export async function updateProduct(db: Db, id: string, input: Partial<ProductInput>) {
   const cols = columns(input);
   if (Object.keys(cols).length === 0) return;
-  const r = await db`update public.products set ${db(cols as Record<string, string>)} where id = ${id}`;
+  const r = await db`update public.products set ${db(cols as never)} where id = ${id}`;
   if (r.count === 0) throw notFound("Product");
 }
 
