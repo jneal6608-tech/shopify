@@ -11,18 +11,25 @@ export interface SessionUser {
   mode: "supabase" | "local";
 }
 
-const bootstrapped = new Set<string>();
+const bootstrapped = new Map<string, Promise<void>>();
 
-async function ensureBootstrapped(user: SessionUser) {
-  if (bootstrapped.has(user.id)) return;
-  if (user.mode === "local") {
-    // Local shim only: make sure the dev user exists in auth.users.
-    await withService(async (db) => {
-      await db`insert into auth.users (id, email) values (${user.id}, ${user.email}) on conflict (id) do nothing`;
-    });
+/** Idempotent per-process bootstrap; concurrent requests share one in-flight promise. */
+function ensureBootstrapped(user: SessionUser): Promise<void> {
+  let p = bootstrapped.get(user.id);
+  if (!p) {
+    p = (async () => {
+      if (user.mode === "local") {
+        // Local shim only: make sure the dev user exists in auth.users.
+        await withService(async (db) => {
+          await db`insert into auth.users (id, email) values (${user.id}, ${user.email === "dev@localhost" ? `dev+${user.id.slice(-4)}@localhost` : user.email}) on conflict do nothing`;
+        });
+      }
+      await bootstrapUser(user.id, user.email);
+    })();
+    bootstrapped.set(user.id, p);
+    p.catch(() => bootstrapped.delete(user.id));
   }
-  await bootstrapUser(user.id, user.email);
-  bootstrapped.add(user.id);
+  return p;
 }
 
 /**

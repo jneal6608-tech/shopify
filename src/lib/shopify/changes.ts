@@ -371,6 +371,7 @@ export async function applyChangeRequest(userId: string, id: string, confirm: { 
     returning kind, payload, product_id`);
   if (!cr) throw new ShopifyError("Only draft change requests can be applied (it may already be applied or in progress).", "user_error");
   let backup: Record<string, unknown> = {};
+  let started = false; // true once a mutation may have reached Shopify
   try {
     const conn = await getConnection(userId);
     backup = await captureState(conn, cr.kind, cr.payload);
@@ -378,6 +379,7 @@ export async function applyChangeRequest(userId: string, id: string, confirm: { 
     if (theme?.role === "MAIN" && !(cr.payload.allowLiveTheme && confirm.confirmLiveTheme)) {
       throw new ShopifyError("This change targets your LIVE theme. Duplicate the theme in Shopify and target the copy, or explicitly allow live-theme changes and confirm again.", "user_error");
     }
+    started = true;
     const result = await applyChange(conn, cr.kind, cr.payload, backup);
     await withUser(userId, async (db) => {
       await db`update public.shopify_change_requests set status = 'applied', applied_at = now(), backup = ${db.json(backup as never)}, result = ${db.json(result as never)}, error = null where id = ${id}`;
@@ -391,7 +393,8 @@ export async function applyChangeRequest(userId: string, id: string, confirm: { 
   } catch (e) {
     const msg = (e as Error).message;
     await withUser(userId, async (db) => {
-      await db`update public.shopify_change_requests set status = ${e instanceof ShopifyError && e.kind === "user_error" && msg.includes("LIVE theme") ? "draft" : "failed"}, error = ${msg.slice(0, 2000)}, backup = ${db.json(backup as never)} where id = ${id}`;
+      // Nothing reached Shopify → back to draft so it can be retried after fixing the cause.
+      await db`update public.shopify_change_requests set status = ${started ? "failed" : "draft"}, error = ${msg.slice(0, 2000)}, backup = ${db.json(backup as never)} where id = ${id}`;
       await audit(db, userId, "shopify.change.failed", "shopify_change_request", id, { kind: cr.kind, error: msg });
     });
     throw e;

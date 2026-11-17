@@ -77,38 +77,65 @@ function pctChange(recent: number, baseline: number): number | null {
   return ((recent - baseline) / baseline) * 100;
 }
 
-function monthlyProfile(points: SeriesPoint[], year: number): number[] | null {
-  const buckets: number[][] = Array.from({ length: 12 }, () => []);
+/** 12 monthly means in chronological order for [from, to), tagged with calendar month. */
+function monthlyProfile(points: SeriesPoint[], from: number, to: number): Array<{ month: number; value: number }> | null {
+  const buckets = new Map<string, { month: number; order: number; values: number[] }>();
   for (const p of points) {
     const d = new Date(p.date);
-    if (d.getUTCFullYear() === year) buckets[d.getUTCMonth()].push(p.value);
+    const t = d.getTime();
+    if (t < from || t >= to) continue;
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
+    const b = buckets.get(key) ?? { month: d.getUTCMonth(), order: d.getUTCFullYear() * 12 + d.getUTCMonth(), values: [] };
+    b.values.push(p.value);
+    buckets.set(key, b);
   }
-  if (buckets.some((b) => b.length === 0)) return null;
-  return buckets.map((b) => mean(b)!);
+  const list = [...buckets.values()].sort((a, b) => a.order - b.order);
+  if (new Set(list.map((b) => b.month)).size < 12) return null;
+  return list.slice(-12).map((b) => ({ month: b.month, value: mean(b.values)! }));
 }
 
+/** Removes a linear trend (fitted over chronological order) so growth is not mistaken for seasonality. */
+function detrend(values: number[]): number[] {
+  const sl = slope(values) ?? 0;
+  const m = mean(values) ?? 0;
+  const mid = (values.length - 1) / 2;
+  return values.map((v, i) => v - (m + sl * (i - mid)));
+}
+
+/**
+ * Seasonality: detrends the monthly profile of the most recent 12 months and
+ * of the 12 months before, aligns them by calendar month and correlates them.
+ * Requires ~24 months of data.
+ */
 export function detectSeasonality(points: SeriesPoint[]): TrendAnalysis["seasonality"] {
   const sorted = sortSeries(points);
-  if (sorted.length < 2) return { detected: false, correlation: null, peakMonths: [] };
-  const lastYear = new Date(sorted[sorted.length - 1].date).getUTCFullYear();
-  // Compare the two most recent complete calendar years available.
-  for (const y of [lastYear - 1, lastYear]) {
-    const a = monthlyProfile(sorted, y - 1);
-    const b = monthlyProfile(sorted, y);
-    if (!a || !b) continue;
-    const r = pearson(a, b);
-    const combined = a.map((v, i) => (v + b[i]) / 2);
-    const m = mean(combined)!;
-    const cv = m > 0 ? (stddev(combined) ?? 0) / m : 0;
-    const detected = r !== null && r >= TREND_RULES.seasonalCorrelation && cv >= TREND_RULES.seasonalMinCv;
-    const max = Math.max(...combined);
-    const peakMonths = combined
-      .map((v, i) => ({ v, i }))
-      .filter((x) => x.v >= max * 0.85)
-      .map((x) => x.i + 1);
-    return { detected, correlation: r === null ? null : round(r, 3), peakMonths: detected ? peakMonths : [] };
-  }
-  return { detected: false, correlation: null, peakMonths: [] };
+  const none = { detected: false, correlation: null, peakMonths: [] as number[] };
+  if (sorted.length < 2) return none;
+  const end = new Date(sorted[sorted.length - 1].date).getTime() + 1;
+  const year = 365 * DAY_MS;
+  const recent = monthlyProfile(sorted, end - year, end);
+  const prior = monthlyProfile(sorted, end - 2 * year - 15 * DAY_MS, end - year);
+  if (!recent || !prior) return none;
+  const byMonth = (prof: Array<{ month: number; value: number }>) => {
+    const res = detrend(prof.map((x) => x.value));
+    const out = new Array<number>(12).fill(0);
+    prof.forEach((x, i) => (out[x.month] = res[i]));
+    return out;
+  };
+  const a = byMonth(prior);
+  const b = byMonth(recent);
+  const r = pearson(a, b);
+  const level = mean([...prior, ...recent].map((x) => x.value)) ?? 0;
+  const combined = a.map((v, i) => (v + b[i]) / 2);
+  const amplitude = level > 0 ? (stddev(combined) ?? 0) / level : 0;
+  const detected = r !== null && r >= TREND_RULES.seasonalCorrelation && amplitude >= TREND_RULES.seasonalMinCv;
+  const max = Math.max(...combined);
+  const min = Math.min(...combined);
+  const peakMonths = combined
+    .map((v, i) => ({ v, i }))
+    .filter((x) => x.v >= max - (max - min) * 0.15)
+    .map((x) => x.i + 1);
+  return { detected, correlation: r === null ? null : round(r, 3), peakMonths: detected ? peakMonths : [] };
 }
 
 export function analyzeTrend(
@@ -162,7 +189,7 @@ export function analyzeTrend(
   const seasonality = detectSeasonality(points);
   const peak = Math.max(...values);
   const peakIndex = values.lastIndexOf(peak);
-  const peakAgeDays = (new Date(points[n - 1].date).getTime() - new Date(points[peakIndex].date).getTime()) / DAY_MS;
+  const earlyMean = mean(values.slice(0, Math.max(2, Math.round(n * 0.25))))!;
 
   const result: TrendAnalysis = {
     ...base,
@@ -196,13 +223,13 @@ export function analyzeTrend(
     result.reasons.push(`Recent average is ${g}% versus the baseline (≤ ${TREND_RULES.declineGrowthPct}%).`);
   } else if (
     recentMean >= peak * TREND_RULES.saturationLevelOfPeak &&
-    peakAgeDays >= 56 &&
-    recentSlope <= 0 &&
+    earlyMean <= recentMean * 0.6 &&
+    recentSlope <= recentMean * 0.01 &&
     opts.competitionTrend === "rising"
   ) {
     result.classification = "saturating";
     result.reasons.push(
-      `Demand has plateaued near its peak (peak ${Math.round(peakAgeDays)} days ago) while competition indicators are rising.`,
+      `Demand rose earlier (first-quarter mean ${round(earlyMean, 1)} → recent ${round(recentMean, 1)}) and has plateaued near its peak while competition indicators are rising.`,
     );
   } else {
     result.classification = "stable";

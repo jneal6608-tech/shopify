@@ -21,7 +21,8 @@ export async function bootstrapUser(userId: string, email: string | null): Promi
     await db`
       insert into public.scoring_weight_versions (user_id, version, weights, reason, source, is_active)
       select ${userId}, 1, ${db.json(DEFAULT_WEIGHTS)}, 'Initial default weights from the product brief', 'default', true
-      where not exists (select 1 from public.scoring_weight_versions where user_id = ${userId})`;
+      where not exists (select 1 from public.scoring_weight_versions where user_id = ${userId})
+      on conflict do nothing`;
     for (const j of DEFAULT_JOBS) {
       await db`
         insert into public.research_jobs (user_id, kind, frequency, enabled, next_run_at)

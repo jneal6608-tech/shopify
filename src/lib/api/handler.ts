@@ -7,6 +7,7 @@ import { logger } from "../logger";
 import { HttpError } from "./errors";
 import { enforceRateLimit } from "./rate-limit";
 import { AiUnavailableError } from "../ai/errors";
+import { ShopifyError } from "../shopify/client";
 
 export interface HandlerContext<B, Q> {
   req: Request;
@@ -91,6 +92,10 @@ export function errorResponse(err: unknown, req: Request, started = Date.now()) 
   }
   if (err instanceof AiUnavailableError) {
     return NextResponse.json({ error: { message: err.message, code: err.code } }, { status: 503 });
+  }
+  if (err instanceof ShopifyError) {
+    const status = { user_error: 400, permission: 403, not_connected: 409, auth: 409, throttled: 429, graphql: 502, network: 502 }[err.kind];
+    return NextResponse.json({ error: { message: err.message, code: `shopify_${err.kind}` } }, { status });
   }
   if (err instanceof DatabaseNotConfiguredError) {
     return NextResponse.json({ error: { message: err.message } }, { status: 503 });

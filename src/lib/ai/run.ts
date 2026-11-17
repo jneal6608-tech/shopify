@@ -91,6 +91,9 @@ export async function runStructured<S extends z.ZodType>(
   const client = getAnthropic();
   await checkBudget(userId);
   const model = await userModel(userId);
+  // Send the JSON schema without the SDK's auto-parser so stop reasons
+  // (refusal / max_tokens) are checked before the output is validated.
+  const { parse, ...format } = betaZodOutputFormat(opts.schema);
   let message;
   try {
     const stream = client.beta.messages.stream({
@@ -105,7 +108,7 @@ export async function runStructured<S extends z.ZodType>(
           content: `Platform data for this request (JSON):\n\n${JSON.stringify(opts.input, null, 1)}`,
         },
       ],
-      output_config: { format: betaZodOutputFormat(opts.schema), effort: opts.effort ?? "medium" },
+      output_config: { format, effort: opts.effort ?? "medium" },
     });
     message = await stream.finalMessage();
   } catch (err) {
@@ -120,8 +123,11 @@ export async function runStructured<S extends z.ZodType>(
   if (message.stop_reason === "max_tokens") {
     throw new AiUnavailableError("truncated", "The AI response was cut off before completing. Try again.");
   }
-  const parsed = message.parsed_output as z.infer<S> | null | undefined;
-  if (parsed === null || parsed === undefined) {
+  const text = message.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text").map((b) => b.text).join("");
+  let parsed: z.infer<S>;
+  try {
+    parsed = parse(text) as z.infer<S>;
+  } catch {
     throw new AiUnavailableError("invalid_output", "The AI returned output that did not match the expected structure. Try again.");
   }
   logger.info("ai.run", { feature: opts.feature, model: servedModel, costUsd, ...usage });

@@ -1,5 +1,5 @@
 /**
- * Opportunity & confidence scoring — formula version "v1".
+ * Opportunity & confidence scoring — formula version "v1.1" (v1.1: rolling 24-month seasonality, plateau-based saturation).
  *
  * Design rules (from the product brief):
  *  1. Scores come from transparent formulas over measurable inputs. The AI
@@ -21,7 +21,7 @@ import {
 import { analyzeTrend, indicatorDirection, type SeriesPoint, type TrendAnalysis, type TrendClass } from "./trends";
 import { COMPONENT_KEYS, COMPONENT_LABELS, type ComponentKey, type ScoringWeights } from "./weights";
 
-export const FORMULA_VERSION = "v1";
+export const FORMULA_VERSION = "v1.1";
 export const MISSING_COMPONENT_SCORE = 25;
 export const AI_ASSESSMENT_RELIABILITY = 0.35;
 export const USER_ASSESSMENT_RELIABILITY = 0.6;

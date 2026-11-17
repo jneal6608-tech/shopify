@@ -82,3 +82,21 @@ describe("indicatorDirection", () => {
     expect(indicatorDirection(weekly(2, () => 10))).toBe("flat");
   });
 });
+
+describe("seasonality vs growth", () => {
+  it("does not mistake a strong multi-year uptrend for seasonality", () => {
+    const r = analyzeTrend(weekly(104, (i) => 12 + 80 * (i / 103) ** 3));
+    expect(r.seasonality.detected).toBe(false);
+    expect(r.classification).toBe("rapidly_rising");
+  });
+  it("detects seasonality with ~2 years of data (not two calendar years)", () => {
+    const end = new Date("2026-11-15T00:00:00Z");
+    const r = analyzeTrend(
+      weekly(104, (i) => {
+        const m = new Date(end.getTime() - (103 - i) * 7 * 86_400_000).getUTCMonth();
+        return m === 10 || m === 11 ? 85 : 22;
+      }, end),
+    );
+    expect(r.seasonality.detected).toBe(true);
+  });
+});
