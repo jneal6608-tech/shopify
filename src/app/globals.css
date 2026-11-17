@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0d14;
+  --color-panel: #10141f;
+  --color-panel-2: #151a28;
+  --color-border: #232a3b;
+  --color-border-strong: #2f3850;
+  --color-fg: #e6e9f2;
+  --color-muted: #8b93a8;
+  --color-faint: #5b6378;
+  --color-accent: #7c6cff;
+  --color-accent-2: #5b8cff;
+  --color-good: #34d399;
+  --color-warn: #fbbf24;
+  --color-bad: #f87171;
+  --color-info: #60a5fa;
+  --color-demo: #f472b6;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-fade-in {
+  animation: fade-in 160ms ease-out;
+}
+
+/* Grid items default to min-width:auto, letting wide tables/nowrap text push
+   single-column layouts wider than the viewport on mobile. */
+.grid > * {
+  min-width: 0;
+}

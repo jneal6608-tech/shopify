@@ -1,0 +1,16 @@
+export const NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/discover", label: "Discover Products", icon: "Search" },
+  { href: "/categories", label: "Categories", icon: "Shapes" },
+  { href: "/trends", label: "Trend Intelligence", icon: "TrendingUp" },
+  { href: "/competitors", label: "Competitor Research", icon: "Swords" },
+  { href: "/suppliers", label: "Supplier Research", icon: "Factory" },
+  { href: "/content", label: "Content Intelligence", icon: "Clapperboard" },
+  { href: "/compare", label: "Product Comparison", icon: "Columns3" },
+  { href: "/watchlist", label: "Watchlist", icon: "Eye" },
+  { href: "/testing", label: "Testing Workspace", icon: "FlaskConical" },
+  { href: "/calculator", label: "Profit Calculator", icon: "Calculator" },
+  { href: "/store", label: "Store Builder", icon: "Store" },
+  { href: "/reports", label: "Reports", icon: "FileText" },
+  { href: "/settings", label: "Settings", icon: "Settings" },
+] as const;
