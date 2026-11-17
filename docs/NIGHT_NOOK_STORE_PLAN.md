@@ -92,7 +92,7 @@ Profit = after 2.9% + $0.30 payments, 5% expected refunds, $0.50 packaging.
 | 50 cm, 1 bar | $19.99 | $8.09 | ~$9.50 |
 | 50 cm, 2 bars | $34.99 | $16.18 | ~$15.25 |
 
-**🌙 Night Path Kit** — 2 round + 1 bar (30 cm), Night Light colour warm/cool · **$34.99** · cost $16.74 (warm) / $16.94 (cool) · profit ~$14.50–14.70
+**🌙 Night Path Kit** (PAUSED: set to draft, since the DSers free plan can't map two suppliers to one variant; bring back on a paid DSers plan) — 2 round + 1 bar (30 cm), Night Light colour warm/cool · **$34.99** · cost $16.74 (warm) / $16.94 (cool) · profit ~$14.50–14.70
 
 Rules:
 - Free shipping on everything (simpler than thresholds, and it's in the announcement bar).
