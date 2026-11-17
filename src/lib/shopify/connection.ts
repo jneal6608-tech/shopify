@@ -131,3 +131,19 @@ export async function disconnectStore(userId: string) {
   // Credentials cascade-delete with the integration row.
   await withUser(userId, (db) => db`delete from public.shopify_integrations`);
 }
+
+/**
+ * Issues a fresh short-lived Admin API token (client-credentials apps only) so the
+ * store owner can hand it to an external tool such as Claude Code. A fresh exchange
+ * picks up any scopes added to the app since the last token. Never logged.
+ */
+export async function issueTemporaryToken(userId: string) {
+  const integ = await getIntegration(userId);
+  if (!integ) throw new ShopifyError("Shopify is not connected. Connect your store in Store Builder.", "not_connected");
+  if (integ.authMode !== "client_credentials") throw new ShopifyError("Temporary tokens are only available for Dev Dashboard (client credentials) connections.", "auth");
+  const [c] = await withService((db) => db<CredRow[]>`select encrypted_access_token, access_token_expires_at, client_id, encrypted_client_secret from public.shopify_credentials where integration_id = ${integ.id} and user_id = ${userId}`);
+  if (!c?.clientId || !c.encryptedClientSecret) throw new ShopifyError("Stored client credentials are missing. Reconnect the store.", "auth");
+  const t = await exchangeClientCredentials(integ.shopDomain, c.clientId, decryptSecret(c.encryptedClientSecret));
+  await withService((db) => db`update public.shopify_credentials set encrypted_access_token = ${encryptSecret(t.accessToken)}, access_token_expires_at = ${t.expiresAt}, updated_at = now() where integration_id = ${integ.id}`);
+  return { shopDomain: integ.shopDomain, accessToken: t.accessToken, expiresAt: t.expiresAt.toISOString(), scopes: t.scope.split(",").filter(Boolean) };
+}

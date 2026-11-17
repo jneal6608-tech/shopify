@@ -9,7 +9,7 @@ import { Badge, Card, CardBody, CardHeader, Notice, PageHeader, Table, TabLinks,
 import { DemoBadge } from "@/components/ui/domain";
 import { ActionButton } from "@/components/ui/action";
 import { fmtDate, fmtMoney, relTime } from "@/lib/utils";
-import { AssistantChat, ChangeActions, ConnectForm, LandingBuilder, LinkProductForm, ListingBuilder, StorefrontGenerator } from "./client";
+import { AssistantChat, ChangeActions, ConnectForm, LandingBuilder, LinkProductForm, ListingBuilder, StorefrontGenerator, TemporaryTokenButton } from "./client";
 
 export const metadata = { title: "Store Builder" };
 const TABS = ["connection", "changes", "listing", "landing", "storefront", "assistant", "sales"] as const;
@@ -72,6 +72,7 @@ export default async function StorePage({ searchParams }: { searchParams: Promis
                     <ActionButton size="sm" variant="secondary" endpoint="/api/shopify/check">Check connection</ActionButton>
                     <ActionButton size="sm" variant="danger" endpoint="/api/shopify/connect" method="DELETE" confirm="Disconnect Shopify and delete the stored credentials? Your store is not changed.">Disconnect</ActionButton>
                   </div>
+                  {d.integ.authMode === "client_credentials" && <TemporaryTokenButton />}
                 </>
               ) : (
                 <p className="text-muted">Not connected.</p>

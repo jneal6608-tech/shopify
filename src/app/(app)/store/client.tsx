@@ -418,3 +418,30 @@ export function LinkProductForm({ products, connected }: { products: Array<{ id:
     </Card>
   );
 }
+
+// ---------------------------------------------------------------- Temporary token
+export function TemporaryTokenButton() {
+  const { submit, pending, error } = useSubmit<{ accessToken: string; expiresAt: string; scopes: string[] }>();
+  const [token, setToken] = React.useState<{ accessToken: string; expiresAt: string; scopes: string[] } | null>(null);
+  const [copied, setCopied] = React.useState(false);
+  return (
+    <div className="space-y-2 border-t border-border pt-3">
+      <p className="text-xs text-muted">Need to give an external tool (e.g. Claude Code) access for a day? Generate a temporary Admin API token. It expires in about 24 hours. Paste it only into a secure credential form — never into a chat.</p>
+      {!token ? (
+        <Button size="sm" variant="secondary" disabled={pending} onClick={async () => { const r = await submit("/api/shopify/token", {}, { refresh: false }); if (r) setToken(r); }}>
+          {pending ? "Generating…" : "Generate temporary access token"}
+        </Button>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input readOnly type="password" value={token.accessToken} aria-label="Temporary access token" />
+            <Button size="sm" onClick={async () => { await navigator.clipboard.writeText(token.accessToken); setCopied(true); }}>{copied ? "Copied" : "Copy"}</Button>
+            <Button size="sm" variant="secondary" onClick={() => { setToken(null); setCopied(false); }}>Hide</Button>
+          </div>
+          <p className="text-[11px] text-faint">Expires {new Date(token.expiresAt).toLocaleString()} · scopes: {token.scopes.join(", ") || "none reported"}</p>
+        </div>
+      )}
+      <FormError error={error} />
+    </div>
+  );
+}
