@@ -61,3 +61,18 @@ describe("shopify validation", () => {
     expect(PAYLOADS.theme_files_upsert.safeParse({ themeId: "gid://shopify/OnlineStoreTheme/1", files: [{ filename: "../../etc/passwd", content: "" }] }).success).toBe(false);
   });
 });
+
+import { sanitizeHtml } from "@/lib/shopify/sanitize";
+describe("sanitizeHtml", () => {
+  it("removes active content but keeps formatting", () => {
+    const dirty = `<p onclick="steal()">Hi <strong>there</strong></p><script>alert(1)</script><a href="javascript:alert(1)">x</a><img src=x onerror=alert(1)><iframe src="https://evil"></iframe><ul><li>ok</li></ul>`;
+    const clean = sanitizeHtml(dirty);
+    expect(clean).not.toMatch(/script|onclick|onerror|javascript:|iframe/i);
+    expect(clean).toContain("<strong>there</strong>");
+    expect(clean).toContain("<li>ok</li>");
+  });
+  it("is applied to Shopify payloads", () => {
+    const p = PAYLOADS.product_create.parse({ title: "X", price: 1, descriptionHtml: "<p>a</p><script>x</script>" });
+    expect(p.descriptionHtml).toBe("<p>a</p>");
+  });
+});

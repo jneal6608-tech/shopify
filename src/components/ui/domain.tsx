@@ -33,7 +33,7 @@ export function ScoreBar({ value, weight }: { value: number | null; weight?: num
           style={{ width: `${value === null ? 100 : Math.max(2, v)}%`, opacity: value === null ? 0.25 : 1 }}
         />
       </div>
-      <span className="w-14 text-right text-xs tabular-nums text-muted">
+      <span className="w-20 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-muted">
         {value === null ? "missing" : Math.round(v)}
         {weight !== undefined && <span className="text-faint"> ·{weight}%</span>}
       </span>

@@ -5,6 +5,7 @@ import { audit } from "../services/audit";
 import { assertNoUserErrors, ShopifyError, shopifyGraphql, type ShopifyConnection } from "./client";
 import { getConnection } from "./connection";
 import { M, Q } from "./queries";
+import { sanitizeHtml } from "./sanitize";
 
 const gid = (type: string) => z.string().regex(new RegExp(`^gid://shopify/${type}/\\d+$`), `Must be a Shopify ${type} GID`);
 const money = z.coerce.number().min(0).max(1_000_000).transform((n) => n.toFixed(2));
@@ -12,7 +13,7 @@ const money = z.coerce.number().min(0).max(1_000_000).transform((n) => n.toFixed
 export const PAYLOADS = {
   product_create: z.object({
     title: z.string().trim().min(1).max(255),
-    descriptionHtml: z.string().max(60_000).default(""),
+    descriptionHtml: z.string().max(60_000).default("").transform(sanitizeHtml),
     productType: z.string().max(255).default(""),
     vendor: z.string().max(255).default(""),
     tags: z.array(z.string().trim().min(1).max(255)).max(100).default([]),
@@ -28,7 +29,7 @@ export const PAYLOADS = {
   product_update: z.object({
     productId: gid("Product"),
     title: z.string().trim().min(1).max(255).optional(),
-    descriptionHtml: z.string().max(60_000).optional(),
+    descriptionHtml: z.string().max(60_000).transform(sanitizeHtml).optional(),
     productType: z.string().max(255).optional(),
     tags: z.array(z.string().trim().min(1).max(255)).max(100).optional(),
     seo: z.object({ title: z.string().max(70), description: z.string().max(320) }).optional(),
@@ -40,13 +41,13 @@ export const PAYLOADS = {
   }),
   collection_create: z.object({
     title: z.string().trim().min(1).max(255),
-    descriptionHtml: z.string().max(60_000).default(""),
+    descriptionHtml: z.string().max(60_000).default("").transform(sanitizeHtml),
     handle: z.string().regex(/^[a-z0-9-]{1,255}$/).optional(),
     productIds: z.array(gid("Product")).max(250).default([]),
   }),
   page_create: z.object({
     title: z.string().trim().min(1).max(255),
-    body: z.string().max(500_000).default(""),
+    body: z.string().max(500_000).default("").transform(sanitizeHtml),
     handle: z.string().regex(/^[a-z0-9-]{1,255}$/).optional(),
     templateSuffix: z.string().regex(/^[a-z0-9_-]{1,100}$/).optional(),
   }),

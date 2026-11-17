@@ -55,3 +55,9 @@ body {
 .animate-fade-in {
   animation: fade-in 160ms ease-out;
 }
+
+/* Grid items default to min-width:auto, letting wide tables/nowrap text push
+   single-column layouts wider than the viewport on mobile. */
+.grid > * {
+  min-width: 0;
+}
