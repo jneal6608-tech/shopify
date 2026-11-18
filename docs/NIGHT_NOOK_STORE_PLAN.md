@@ -87,9 +87,9 @@ Profit = after 2.9% + $0.30 payments, 5% expected refunds, $0.50 packaging.
 **➖ Motion Light Bar** (options "Size" × "Pack"; 3-colour version, dimmable)
 | Option | Price | Your cost | Profit |
 |---|---|---|---|
-| 30 cm, 1 bar | $17.99 | $7.48 | ~$8.30 |
+| 30 cm, 1 bar | $19.99 | $7.48 | ~$8.30 after $1.99 shipping |
 | **30 cm, 2 bars — Most popular** (menu link preselects) | **$29.99** | $14.96 | **~$11.85** |
-| 50 cm, 1 bar | $19.99 | $8.09 | ~$9.50 |
+| 50 cm, 1 bar | $21.99 | $8.09 | ~$9.40 after $1.99 shipping |
 | 50 cm, 2 bars | $34.99 | $16.18 | ~$15.25 |
 
 **🌙 Night Path Kit** (PAUSED: set to draft, since the DSers free plan can't map two suppliers to one variant; bring back on a paid DSers plan) — 2 round + 1 bar (30 cm), Night Light colour warm/cool · **$34.99** · cost $16.74 (warm) / $16.94 (cool) · profit ~$14.50–14.70
